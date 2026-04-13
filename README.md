@@ -1,8 +1,4 @@
 # Analisis_Apuestas_Deportivas
-¡De una! Un buen README es lo que diferencia un proyecto del montón de uno que parece hecho por un desarrollador senior.
-
-Aquí tienes una estructura lista para que la copies y la pegues en un archivo llamado README.md dentro de tu repositorio de GitHub.
-
 ⚡ Terminal de Estrategia Deportiva (Surebet Finder COL)
 Este proyecto es una herramienta avanzada desarrollada en Google Apps Script que convierte una hoja de Google Sheets en una terminal de análisis financiero para apuestas deportivas, optimizada para el mercado colombiano (Liga BetPlay, Libertadores, etc.).
 
