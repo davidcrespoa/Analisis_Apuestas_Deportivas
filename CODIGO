@@ -1,5 +1,5 @@
 /**
- * TERMINAL ESTRATÉGICA V7.0 - FIX TOTAL
+ * TERMINAL ESTRATÉGICA V10.0 - REPORTE PREMIUM
  */
 function onOpen() {
   SpreadsheetApp.getUi().createMenu('🚀 OPERACIONES')
@@ -10,49 +10,12 @@ function onOpen() {
       .addToUi();
 }
 
-/**
- * CALCULA LA ESTRATEGIA (BOTÓN VERDE)
- */
-function analizarApuestaMaestra() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const dash = ss.getSheetByName("PANEL_CONTROL");
-  
-  const inversion = dash.getRange("D5").getValue();
-  const cL = dash.getRange("B8").getValue();
-  const cE = dash.getRange("C8").getValue();
-  const cV = dash.getRange("D8").getValue();
-  
-  if (!inversion || isNaN(cL) || isNaN(cE) || isNaN(cV)) {
-    SpreadsheetApp.getUi().alert("⚠️ TERMINAL VACÍA\n\nElige un partido y pon el monto de inversión.");
-    return;
-  }
-
-  const p = (1/cL) + (1/cE) + (1/cV);
-  const ben = ((1/p)-1)*100;
-  const aL = Math.round((inversion/(cL*p))/50)*50;
-  const aE = Math.round((inversion/(cE*p))/50)*50;
-  const aV = Math.round((inversion/(cV*p))/50)*50;
-
-  let msg = "📊 REPORTE DE ESTRATEGIA\n" +
-            "──────────────────\n" +
-            "📈 RETORNO: " + ben.toFixed(2) + "%\n" +
-            "──────────────────\n" +
-            "🏠 LOCAL: $" + aL.toLocaleString('es-CO') + "\n" +
-            "🤝 EMPATE: $" + aE.toLocaleString('es-CO') + "\n" +
-            "🏃 VISITA: $" + aV.toLocaleString('es-CO') + "\n\n" +
-            "💰 COBRO: $" + Math.round(aL * cL).toLocaleString('es-CO');
-
-  SpreadsheetApp.getUi().alert(msg);
-}
-
-/**
- * AUTO-RELLENO AL ELEGIR PARTIDO
- */
 function onEdit(e) {
   const range = e.range;
   const sheet = range.getSheet();
   if (sheet.getName() === "PANEL_CONTROL" && range.getA1Notation() === "D4") {
     const partido = range.getValue();
+    if (!partido) return;
     const motor = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("MOTOR_CUOTAS");
     const datos = motor.getDataRange().getValues();
     for (let i = 1; i < datos.length; i++) {
@@ -67,67 +30,101 @@ function onEdit(e) {
 }
 
 /**
- * DISEÑO DARK MODE (CORREGIDO SIN ERRORES)
+ * FUNCIÓN ACTUALIZADA: REPORTE DETALLADO Y BONITO
  */
+function analizarApuestaMaestra() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const dash = ss.getSheetByName("PANEL_CONTROL");
+  
+  const partido = dash.getRange("D4").getValue();
+  const inversion = dash.getRange("D5").getValue();
+  const cL = dash.getRange("B8").getValue();
+  const cE = dash.getRange("C8").getValue();
+  const cV = dash.getRange("D8").getValue();
+  
+  if (!inversion || isNaN(cL) || isNaN(cE) || isNaN(cV)) {
+    SpreadsheetApp.getUi().alert("⚠️ DATOS INCOMPLETOS\n\nPor favor, selecciona un partido y coloca un monto de inversión.");
+    return;
+  }
+
+  // Cálculos de arbitraje
+  const probTotal = (1/cL) + (1/cE) + (1/cV);
+  const retornoPorcentaje = ((1 / probTotal) - 1) * 100;
+  
+  // Distribución (Ajustado a $50 COP)
+  const aL = Math.round((inversion / (cL * probTotal)) / 50) * 50;
+  const aE = Math.round((inversion / (cE * probTotal)) / 50) * 50;
+  const aV = Math.round((inversion / (cV * probTotal)) / 50) * 50;
+  
+  // Cobro y Ganancia neta
+  const cobroFinal = Math.round(aL * cL);
+  const gananciaNeta = cobroFinal - inversion;
+
+  // --- DISEÑO DEL MENSAJE ---
+  let encabezado = (retornoPorcentaje > 0) ? "✅ ¡OPORTUNIDAD DE SUREBET!" : "📊 ANÁLISIS DE COBERTURA";
+  
+  let reporte = `${encabezado}\n` +
+                `🏟️ Evento: ${partido}\n` +
+                `──────────────────────────\n` +
+                `📈 RENDIMIENTO: ${retornoPorcentaje.toFixed(2)}%\n` +
+                `💰 CAPITAL TOTAL: $${inversion.toLocaleString('es-CO')}\n` +
+                `──────────────────────────\n` +
+                `📍 PLAN DE ACCIÓN:\n\n` +
+                `🏠 LOCAL (1):   $${aL.toLocaleString('es-CO')}\n` +
+                `🤝 EMPATE (X):  $${aE.toLocaleString('es-CO')}\n` +
+                `🏃 VISITA (2):  $${aV.toLocaleString('es-CO')}\n\n` +
+                `──────────────────────────\n` +
+                `💵 COBRO ESTIMADO: $${cobroFinal.toLocaleString('es-CO')}\n` +
+                `✨ UTILIDAD NETA: $${gananciaNeta.toLocaleString('es-CO')}\n` +
+                `──────────────────────────`;
+
+  SpreadsheetApp.getUi().alert(reporte);
+}
+
 function disenarDashboard() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   let dash = ss.getSheetByName("PANEL_CONTROL");
   let motor = ss.getSheetByName("MOTOR_CUOTAS");
-  
-  dash.clear();
+  dash.getRange("D4:H5").setDataValidation(null); 
   dash.getRange("A1:Z50").setBackground("#0b0e14");
-  
-  // Título
-  const titulo = dash.getRange("B2:H2");
-  titulo.merge().setValue("⚡ TERMINAL DE ESTRATEGIA PRO")
-        .setFontSize(20).setFontWeight("bold").setFontColor("#ffffff")
-        .setBackground("#1e222d").setHorizontalAlignment("center").setVerticalAlignment("middle");
-
-  // Etiquetas
-  dash.getRange("B4:C4").merge().setValue("PARTIDO").setFontColor("#94a3b8").setFontWeight("bold");
-  dash.getRange("B5:C5").merge().setValue("INVERSIÓN").setFontColor("#94a3b8").setFontWeight("bold");
-
-  // Campos de entrada (D4 y D5)
-  dash.getRange("D4:H4").merge().setBackground("#1e222d").setFontColor("#3b82f6").setFontWeight("bold");
-  dash.getRange("D5:H5").merge().setBackground("#1e222d").setFontColor("#10b981").setFontWeight("bold").setNumberFormat("$#,##0");
-
-  // Cuotas
+  dash.getRange("B2:H2").merge().setValue("⚡ TERMINAL DE ESTRATEGIA PRO")
+      .setFontSize(20).setFontWeight("bold").setFontColor("#ffffff")
+      .setBackground("#1e222d").setHorizontalAlignment("center").setVerticalAlignment("middle");
+  dash.getRange("B4:C4").merge().setValue("PARTIDO").setFontColor("#00FF2F").setFontWeight("bold");
+  dash.getRange("B5:C5").merge().setValue("INVERSIÓN").setFontColor("#FF00E1").setFontWeight("bold");
+  const celdaPartido = dash.getRange("D4:H4").merge();
+  celdaPartido.setBackground("#1e222d").setFontColor("#3b82f6").setFontWeight("bold");
+  const celdaInversion = dash.getRange("D5:H5").merge();
+  celdaInversion.setBackground("#1e222d").setFontColor("#10b981").setFontWeight("bold").setNumberFormat("$#,##0");
   const etiquetas = ["LOCAL (1)", "EMPATE (X)", "VISITA (2)"];
   const cols = ["B", "C", "D"];
   for (let i = 0; i < 3; i++) {
     dash.getRange(cols[i] + "7").setValue(etiquetas[i]).setFontColor("#94a3b8").setHorizontalAlignment("center");
     dash.getRange(cols[i] + "8").setBackground("#1e222d").setFontColor("#ffffff").setFontSize(18).setFontWeight("bold").setHorizontalAlignment("center");
   }
-
-  // Lista Desplegable
-  if (motor.getLastRow() > 1) {
-    const reglas = SpreadsheetApp.newDataValidation().requireValueInRange(motor.getRange(2, 2, motor.getLastRow(), 1)).build();
-    dash.getRange("D4").setDataValidation(reglas);
+  const ultimaFila = motor.getLastRow();
+  if (ultimaFila > 1) {
+    const rangoPartidos = motor.getRange(2, 2, ultimaFila - 1, 1);
+    const regla = SpreadsheetApp.newDataValidation().requireValueInRange(rangoPartidos).setAllowInvalid(false).build();
+    celdaPartido.setDataValidation(regla);
   }
-  
   dash.autoResizeColumns(2, 5);
-  SpreadsheetApp.getUi().alert("✨ Terminal Restaurada.");
 }
 
 function actualizarAnalisisDeportivos() {
-  // Función simplificada para no fallar
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  let sheet = ss.getSheetByName("MOTOR_CUOTAS");
-  const API_KEY = "ESCRIBE AQUI TU API_KEY"; 
+  const motor = ss.getSheetByName("MOTOR_CUOTAS");
+  const API_KEY = "558524c0d6b84ab8995e3f7840fcaeb7";
   const url = `https://api.the-odds-api.com/v4/sports/soccer_colombia_primera_a/odds/?apiKey=${API_KEY}&regions=eu&markets=h2h`;
-  
   try {
-    const resp = UrlFetchApp.fetch(url);
-    const data = JSON.parse(resp.getContentText());
-    let res = [];
-    data.forEach(ev => {
-      let b = ev.bookmakers[0]?.markets[0]?.outcomes;
-      if(b) res.push(["COLOMBIA", ev.home_team + " vs " + ev.away_team, "Hoy", "Casa", b[0].price, b[2].price, b[1].price]);
+    const res = JSON.parse(UrlFetchApp.fetch(url).getContentText());
+    let data = [];
+    res.forEach(e => {
+      let o = e.bookmakers[0]?.markets[0]?.outcomes;
+      if(o) data.push(["LIGA BETPLAY", e.home_team + " vs " + e.away_team, "Hoy", "Casa", o[0].price, o[2].price, o[1].price]);
     });
-    if(res.length > 0) {
-      sheet.clear().getRange(1,1,1,7).setValues([["L","P","F","C","L","E","V"]]);
-      sheet.getRange(2,1,res.length,7).setValues(res);
-      disenarDashboard();
-    }
-  } catch(e) { SpreadsheetApp.getUi().alert("Error API: " + e); }
+    motor.clear().getRange(1,1,1,7).setValues([["T","P","F","C","L","E","V"]]);
+    motor.getRange(2,1,data.length,7).setValues(data);
+    disenarDashboard();
+  } catch(e) { SpreadsheetApp.getUi().alert("Error: " + e); }
 }
