@@ -114,7 +114,7 @@ function disenarDashboard() {
 function actualizarAnalisisDeportivos() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const motor = ss.getSheetByName("MOTOR_CUOTAS");
-  const API_KEY = "558524c0d6b84ab8995e3f7840fcaeb7";
+  const API_KEY = "TU_API_KEY_AQUÍ";
   const url = `https://api.the-odds-api.com/v4/sports/soccer_colombia_primera_a/odds/?apiKey=${API_KEY}&regions=eu&markets=h2h`;
   try {
     const res = JSON.parse(UrlFetchApp.fetch(url).getContentText());
